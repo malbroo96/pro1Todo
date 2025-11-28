@@ -1,32 +1,28 @@
 import { useState, useEffect } from "preact/hooks";
 
 export function App() {
-  const API = "https://pro1todo-1.onrender.com"; // Your backend URL
+  const API = "https://pro1todo-1.onrender.com";
 
   const [task, setTask] = useState("");
   const [todos, setTodos] = useState([]);
   const [editingId, setEditingId] = useState(null);
 
-  // Fetch all todos
   useEffect(() => {
     fetch(`${API}/todos`)
       .then(res => res.json())
       .then(data => setTodos(data))
-      .catch(err => console.log(err));
+      .catch(console.error);
   }, []);
 
-  // Add or Update Todo
   const handleAdd = async () => {
     if (!task.trim()) return;
 
-    // Update existing todo
     if (editingId) {
       const res = await fetch(`${API}/todos/${editingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: task })
       });
-
       const data = await res.json();
       setTodos(todos.map(t => (t._id === editingId ? data : t)));
       setEditingId(null);
@@ -34,7 +30,6 @@ export function App() {
       return;
     }
 
-    // Add new todo
     const res = await fetch(`${API}/todos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -46,13 +41,11 @@ export function App() {
     setTask("");
   };
 
-  // Delete todo
   const handleDelete = async (id) => {
     await fetch(`${API}/todos/${id}`, { method: "DELETE" });
     setTodos(todos.filter(t => t._id !== id));
   };
 
-  // Toggle complete
   const handleComplete = async (id, completed) => {
     const res = await fetch(`${API}/todos/${id}`, {
       method: "PATCH",
@@ -64,62 +57,70 @@ export function App() {
     setTodos(todos.map(t => (t._id === id ? data : t)));
   };
 
-  // Load todo into input
   const handleEdit = (todo) => {
     setEditingId(todo._id);
     setTask(todo.text);
   };
 
   return (
-    <div>
-      <h1 className="text-center font-bold text-2xl bg-blue-100">To Do App</h1>
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 p-4 md:p-10">
+      <h1 className="text-center font-bold text-3xl md:text-4xl text-gray-800 mb-6 tracking-wide">
+        To-Do App
+      </h1>
 
-      <div className="flex gap-2 py-10 px-70">
+      {/* Input Section */}
+      <div className="max-w-2xl mx-auto flex gap-3 p-4 bg-white/70 backdrop-blur-lg shadow-xl rounded-2xl border border-gray-200 transition-all">
         <input
           type="text"
           value={task}
-          placeholder="Enter Your Task"
+          placeholder="Enter a task…"
           onInput={(e) => setTask(e.target.value)}
-          className="flex-1 px-3 py-2 border border-red-400 rounded-2xl 
-                     focus:outline-none focus:ring-blue-500 focus:ring-2"
+          className="flex-1 px-4 py-3 rounded-xl border border-gray-300 focus:ring-4 focus:ring-blue-300 focus:outline-none shadow-sm"
         />
 
         <button
           onClick={handleAdd}
-          className="px-4 py-2 bg-amber-500 rounded-2xl text-white hover:bg-blue-400"
+          className="px-5 py-3 bg-blue-600 rounded-xl text-white font-semibold shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all active:scale-95"
         >
-          {editingId ? "Update" : "Add Task"}
+          {editingId ? "Update" : "Add"}
         </button>
       </div>
 
-      <div className="px-10">
+      {/* Todo List */}
+      <div className="max-w-2xl mx-auto mt-8 space-y-4">
         {todos.map((todo) => (
           <div
             key={todo._id}
-            className="flex justify-between items-center mb-3 p-3 bg-gray-100 rounded-lg"
+            className="flex justify-between items-center p-4 rounded-xl bg-white shadow-md hover:shadow-lg transition-all border border-gray-200"
           >
-            <span className={`${todo.completed ? "line-through text-gray-400" : ""}`}>
+            <span
+              className={`text-lg ${
+                todo.completed
+                  ? "line-through text-gray-400"
+                  : "text-gray-800"
+              } transition-all`}
+            >
               {todo.text}
             </span>
 
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
                 onClick={() => handleComplete(todo._id, todo.completed)}
-                className="px-2 py-1 bg-green-500 text-white rounded-md"
+                className="px-3 py-1 rounded-lg bg-green-500 text-white text-sm shadow hover:bg-green-600 active:scale-95 transition"
               >
                 {todo.completed ? "Undo" : "Done"}
               </button>
 
               <button
                 onClick={() => handleEdit(todo)}
-                className="px-2 py-1 bg-blue-500 text-white rounded-md"
+                className="px-3 py-1 rounded-lg bg-blue-500 text-white text-sm shadow hover:bg-blue-600 active:scale-95 transition"
               >
                 Edit
               </button>
 
               <button
                 onClick={() => handleDelete(todo._id)}
-                className="px-2 py-1 bg-red-500 text-white rounded-md"
+                className="px-3 py-1 rounded-lg bg-red-500 text-white text-sm shadow hover:bg-red-600 active:scale-95 transition"
               >
                 Delete
               </button>
