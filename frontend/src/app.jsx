@@ -1,30 +1,30 @@
 import { useState, useEffect } from "preact/hooks";
 
 export function App() {
+  const API = "https://pro1todo-1.onrender.com"; // Your backend URL
+
   const [task, setTask] = useState("");
   const [todos, setTodos] = useState([]);
   const [editingId, setEditingId] = useState(null);
 
-  // Fetch existing todos from backend (MongoDB)
+  // Fetch all todos
   useEffect(() => {
-    fetch("mongodb+srv://akhiljoseph225292_db_user:bOV9gblP5mlBwYAt@cluster0.dydukaz.mongodb.net/")
+    fetch(`${API}/todos`)
       .then(res => res.json())
       .then(data => setTodos(data))
       .catch(err => console.log(err));
   }, []);
 
-  // Add or Update Task
+  // Add or Update Todo
   const handleAdd = async () => {
     if (!task.trim()) return;
 
+    // Update existing todo
     if (editingId) {
-      // Update existing todo
-      const updatedTodo = { text: task };
-
-      const res = await fetch(`"mongodb+srv://akhiljoseph225292_db_user:bOV9gblP5mlBwYAt@cluster0.dydukaz.mongodb.net/${editingId}`, {
+      const res = await fetch(`${API}/todos/${editingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedTodo)
+        body: JSON.stringify({ text: task })
       });
 
       const data = await res.json();
@@ -35,12 +35,10 @@ export function App() {
     }
 
     // Add new todo
-    const newTodo = { text: task, completed: false };
-
-    const res = await fetch("mongodb+srv://akhiljoseph225292_db_user:bOV9gblP5mlBwYAt@cluster0.dydukaz.mongodb.net/", {
+    const res = await fetch(`${API}/todos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newTodo)
+      body: JSON.stringify({ text: task, completed: false })
     });
 
     const data = await res.json();
@@ -48,15 +46,15 @@ export function App() {
     setTask("");
   };
 
-  // Delete Task
+  // Delete todo
   const handleDelete = async (id) => {
-    await fetch(`mongodb+srv://akhiljoseph225292_db_user:bOV9gblP5mlBwYAt@cluster0.dydukaz.mongodb.net/${id}`, { method: "DELETE" });
+    await fetch(`${API}/todos/${id}`, { method: "DELETE" });
     setTodos(todos.filter(t => t._id !== id));
   };
 
-  // Toggle Complete
+  // Toggle complete
   const handleComplete = async (id, completed) => {
-    const res = await fetch(`mongodb+srv://akhiljoseph225292_db_user:bOV9gblP5mlBwYAt@cluster0.dydukaz.mongodb.net/${id}`, {
+    const res = await fetch(`${API}/todos/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ completed: !completed })
@@ -66,7 +64,7 @@ export function App() {
     setTodos(todos.map(t => (t._id === id ? data : t)));
   };
 
-  // Edit Task Button
+  // Load todo into input
   const handleEdit = (todo) => {
     setEditingId(todo._id);
     setTask(todo.text);
@@ -100,11 +98,7 @@ export function App() {
             key={todo._id}
             className="flex justify-between items-center mb-3 p-3 bg-gray-100 rounded-lg"
           >
-            <span
-              className={`${
-                todo.completed ? "line-through text-gray-400" : ""
-              }`}
-            >
+            <span className={`${todo.completed ? "line-through text-gray-400" : ""}`}>
               {todo.text}
             </span>
 
